@@ -66,3 +66,35 @@ class FirePower():
         if vrouters['name'] == "Global":
             print("Got Global routing table, ID: " + vrouters['id'])
             self.globalVR = vrouters["id"]
+
+    def addRoute(self):
+        # Function to add new route to routing table
+        print("Getting current route table...")
+        # First we check to make sure the route already exists,
+        # otherwise no work is necessary
+        route = self.doesRouteExist()
+        if route:
+            # If our backup route already exists, make no changes
+            print("Already in failover state. \
+                  No changes made to routing table")
+            return False
+        else:
+            # If not already failed over - proceed to add backup route
+            print("No backup route currently in routing table. \
+                   Adding backup route...")
+            # First create a route object - a collection of data required
+            # to add a static route entry
+            route_data = self.createRouteObject()
+            add_url = "/devices/default/routing/virtualrouters/" + \
+                      self.globalVR + "/staticrouteentries"
+            print("CREATE: Route object")
+            # Post to route creation API
+            self.postData(add_url, route_data)
+            print("Static route added")
+            # Deploy config changes
+            if self.deployPolicy() is True:
+                print("Route successfully added & changes deployed.")
+                return True
+            else:
+                print("ERROR: Deployment error. Route may not be added.")
+                return False
