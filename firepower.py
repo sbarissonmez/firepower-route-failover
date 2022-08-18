@@ -40,3 +40,29 @@ class FirePower():
         with requests.Session() as self.s:
             self.token = self.authRequest()
             self.getGlobalVR()
+
+    def authRequest(self):
+        # Authenticate to FDM and retrieve token
+        authurl = baseurl + "/fdm/token"
+        print("Posting AUTH request to FDM")
+        resp = self.s.post(authurl, headers=headers,
+                           data=json.dumps(oauth_data),
+                           verify=False)
+        if resp.status_code == 200:
+            print("Auth success - got token.")
+            return json.loads(resp.text)['access_token']
+        else:
+            print("Authentication Failed.")
+            print(resp.text)
+
+    def getGlobalVR(self):
+        # Grab list of virtual routers
+        print("Pulling list of virtual routers...")
+        vr_url = "/devices/default/routing/virtualrouters"
+        resp = self.getData(vr_url)
+        # Parse for Global virtual router
+        print("Got virtual routers - finding global vrouter...")
+        vrouters = json.loads(resp)['items'][0]
+        if vrouters['name'] == "Global":
+            print("Got Global routing table, ID: " + vrouters['id'])
+            self.globalVR = vrouters["id"]
