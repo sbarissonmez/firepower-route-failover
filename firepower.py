@@ -98,3 +98,28 @@ class FirePower():
             else:
                 print("ERROR: Deployment error. Route may not be added.")
                 return False
+
+    def delRoute(self):
+        # Function to delete static route from routing table
+        print("Getting current route table...")
+        # First we check to make sure the route already exists,
+        # otherwise no work is necessary
+        route = self.doesRouteExist()
+        if route is False:
+            # If no route is found, then no changes are needed
+            print("Not currently in failover state. \
+                  No changes made to routing table")
+            return False
+        else:
+            # If we found our backup route, then proceed to removal
+            del_url = "/devices/default/routing/virtualrouters/" + \
+                      self.globalVR + "/staticrouteentries/" + route['id']
+            # Send DELETE to route object, then deploy policy changes
+            if self.deleteData(del_url) is True:
+                print("Static route deleted.")
+                if self.deployPolicy() is True:
+                    print("Route successfully removed & changes deployed.")
+                    return True
+                else:
+                    print("ERROR: Deployment error. Route may not be removed.")
+                    return False
