@@ -1,4 +1,4 @@
-# Cisco FirePower Route Failover
+## Cisco FirePower Route Failover
 
 This is a script to perform automated monitoring & failover of a FirePower appliance's primary internet connection. Upon exceeding pre-defined thresholds for packet loss & latency, we can inject a static route to a secondary internet connection. Automatic fail-back to the primary is performed once loss/latency returns to normal.
 
@@ -10,14 +10,14 @@ There are two modules to this script:
 
 `firepower.py` - This module handles all of the API connectivity to FirePower FDM. This contains all of the logic to create & delete network objects, route objects, etc.
 
-## How-to-Use
+### How to Use
 
 1. Clone repo
-2. Install requirements.txt
-3. Fill out options.json
-4. Set up cron to run `pathmonitor.py` at your preferred interval
+2. Install `requirements.txt`
+3. Fill out `options.json`
+4. Set up cron to run `routefailover.py` at your preferred interval
 
-## Required options.json
+### `options.json` values
 
 The following options must be configured prior to use:
 
@@ -37,9 +37,12 @@ The following options must be configured prior to use:
 | failover_gateway | Next hop IP of backup path (ex. 10.10.10.10)|
 | failover_interface | Outbound interface of backup gateway (ex. Ethernet1/1)|
 
-## What else is required? 
+### How can you use it?
 
-1. You need multiple internet connections (Hoped that one was obvious :) )
+1. You need multiple internet connections.
+
 2. Create a static host route (/32) for the ping target via the primary internet connection. This ensures we can continue to monitor the connection even after traffic is moved to the secondary provider.
+
 3. If you are failing over ALL traffic (0.0.0.0/0) - you may want to increase the metric for your primary default route. The backup route gets created with a metric of 1, and we want to make sure that one is preferred.
+
 4. Any other config required on the FirePower box to permit traffic via the second connection (Access lists, NAT rules, etc)
