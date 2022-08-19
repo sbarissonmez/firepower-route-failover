@@ -162,11 +162,31 @@ class FirePower():
         # Iterate through all routes to find our specific backup route
         for route in current_routes:
             gateway = self.getNetworkObject(route['gateway']['id'])
-            dest_network = self.getNetworkObject(
-                route['networks'][0]['id']).split('/')[0]
+            dest_network = self.getNetworkObject(route['networks'][0]['id']).split('/')[0]
             # Match based on route prefix & upstream next hop gateway
             if gateway == GATEWAY and dest_network == ROUTE.split('/')[0]:
                 print("Found route to %s via %s" % (dest_network, gateway))
                 return route
         # Return false if we don't find anything
         return False
+
+    def getNetworkObject(self, id):
+        # Get network object IP Address by known ID
+        host_url = "/object/networks/" + id
+        netobj = self.getData(host_url)
+        return json.loads(netobj)['value']
+
+    def getDuplicateObject(self, name):
+        # Get object ID by known object name
+        host_url = "/object/networks?filter=name%3A" + name
+        netobj = self.getData(host_url)
+        return json.loads(netobj)['items'][0]['id']
+
+    def getFailoverInterface(self, failover_interface):
+        # Get interface ID
+        iface_url = "/devices/default/interfaces"
+        ifaceList = self.getData(iface_url)
+        for iface in json.loads(ifaceList)['items']:
+            # Iterate through all interfaces to find physical port name
+            if iface['hardwareName'] == failover_interface:
+                return iface['id'], iface['name']
