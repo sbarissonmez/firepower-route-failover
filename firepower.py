@@ -123,3 +123,50 @@ class FirePower():
                 else:
                     print("ERROR: Deployment error. Route may not be removed.")
                     return False
+
+    def deployPolicy(self):
+        # Policy deployment & status checking
+        url = "/operational/deploy"
+        print("Beginning change deployment")
+        # Send POST request, which starts deployment. Grab ID to check status
+        deploymentID = json.loads(self.postData(url))['id']
+        print("Changes being deployed... Deployment ID: " + deploymentID)
+        deployed = False
+        while deployed is False:
+            # Deployment is not instant - we will give it a
+            # few seconds between checks
+            # NOTE: Can take a long time depending on appliance
+            #       resources & number of changes
+            sleep(8)
+            print("Checking Deployment Status...")
+            # Grab current deployment task list
+            taskList = json.loads(self.getData(url))
+            # Search for our deployment task by ID
+            for task in taskList['items']:
+                # Check the status of our deployment
+                if task['id'] == deploymentID and task['state'] == 'DEPLOYED':
+                    print("Deployment status is: " + task['state'])
+                    deployed = True
+                    return True
+                elif task['id'] == deploymentID and task['state'] != 'DEPLOYED':
+                    # If changes not yet deployed, check again momentarily
+                    print("Deployment status is: " + task['state'])
+                    deployed = False
+
+    def doesRouteExist(self):
+        # Pull current routing table and look for our backup route
+        current_routes = self.getRoutes()
+        # If no routes exist, skip everything
+        if current_routes == []:
+            return False
+        # Iterate through all routes to find our specific backup route
+        for route in current_routes:
+            gateway = self.getNetworkObject(route['gateway']['id'])
+            dest_network = self.getNetworkObject(
+                route['networks'][0]['id']).split('/')[0]
+            # Match based on route prefix & upstream next hop gateway
+            if gateway == GATEWAY and dest_network == ROUTE.split('/')[0]:
+                print("Found route to %s via %s" % (dest_network, gateway))
+                return route
+        # Return false if we don't find anything
+        return False
