@@ -190,3 +190,47 @@ class FirePower():
             # Iterate through all interfaces to find physical port name
             if iface['hardwareName'] == failover_interface:
                 return iface['id'], iface['name']
+
+    def createGateway(self, address):
+        # Send request to createNetworkObject with gateway specific parameters
+        host_name = "gateway_" + str(address)
+        gateway = self.createNetworkObject(host_name, 'HOST', address)
+        return gateway, host_name
+
+    def createNetwork(self, address):
+        # Send request to createNetworkObject with network specific parameters
+        # NOTE: Firepower naming cannot include special characters..
+        #       so need to remove the CIDR prefix
+        host_name = "network_" + str(address.split('/')[0])
+        # NOTE: Via API - FDM requires full netmask, no CIDR
+        address = str(IPv4Network(address).network_address) + \
+            "/" + str(IPv4Network(address).netmask)
+        netobj = self.createNetworkObject(host_name, 'NETWORK', address)
+        return netobj, host_name
+
+    def createRouteObject(self):
+        # Collect required data:
+        iface_ID, iface_name = self.getFailoverInterface(FO_INTERFACE)
+        network_ID, network_name = self.createNetwork(ROUTE)
+        gateway_ID, gateway_name = self.createGateway(GATEWAY)
+        # Generate dict of required values to create static route object
+        routeobject = {}
+        routeobject['name'] = "route_BACKUP"
+        routeobject['description'] = "Created by ISP Failover automation"
+        routeobject['iface'] = {}
+        routeobject['iface']['id'] = iface_ID
+        routeobject['iface']['type'] = "physicalinterface"
+        routeobject['iface']['name'] = iface_name
+        routeobject['networks'] = [{}]
+        routeobject['networks'][0] = {}
+        routeobject['networks'][0]['id'] = network_ID
+        routeobject['networks'][0]['type'] = "networkobject"
+        routeobject['networks'][0]['name'] = network_name
+        routeobject['gateway'] = {}
+        routeobject['gateway']['id'] = gateway_ID
+        routeobject['gateway']['type'] = "networkobject"
+        routeobject['gateway']['name'] = gateway_name
+        routeobject['metricValue'] = 1
+        routeobject['ipType'] = "IPv4"
+        routeobject['type'] = "staticrouteentry"
+        return routeobject
