@@ -234,3 +234,66 @@ class FirePower():
         routeobject['ipType'] = "IPv4"
         routeobject['type'] = "staticrouteentry"
         return routeobject
+
+    def createNetworkObject(self, name, subtype, address):
+        # Create a new network object
+        host_url = "/object/networks"
+        # Define host details
+        host_data = {}
+        host_data['name'] = name
+        host_data['description'] = "Created by ISP Failover automation"
+        host_data['subType'] = subtype
+        host_data['value'] = address
+        host_data['type'] = "networkobject"
+        # Post to object creation API
+        print("CREATE: Network Object: " + str(address))
+        netobj = self.postData(host_url, host_data)
+        try:
+            # Check to see if we received duplicate object error
+            if json.loads(netobj)['error']['messages'][0]['code'] == "duplicateName":
+                # If already created... just go find existing object ID
+                dupID = self.getDuplicateObject(name)
+                print("Found duplicate ID: " + dupID)
+                return dupID
+            else:
+                # If object created, return object ID
+                print("NEW ObjectID: " + json.loads(netobj)['id'])
+                return json.loads(netobj)['id']
+        except KeyError:
+            return json.loads(netobj)['id']
+
+    def getRoutes(self):
+        # Grab list of ALL static route entries
+        route_url = "/devices/default/routing/virtualrouters/" + \
+                    self.globalVR + "/staticrouteentries"
+        route_data = self.getData(route_url)
+        return json.loads(route_data)['items']
+
+    def getData(self, url):
+        # General function for HTTP GET requests with authentication token
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + self.token
+        }
+        get_url = baseurl + url
+        resp = self.s.get(get_url, headers=headers, verify=False)
+        if resp.status_code == 200:
+            return resp.text
+        else:
+            print("Request FAILED. " + str(resp.status_code))
+            print(resp.text)
+
+    def deleteData(self, url):
+        # General function for HTTP DELETE requests
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + self.token
+        }
+        get_url = baseurl + url
+        resp = self.s.delete(get_url, headers=headers, verify=False)
+        if resp.status_code == 204:
+            return True
+        else:
+            print("Request FAILED. " + str(resp.status_code))
+            return False
+
