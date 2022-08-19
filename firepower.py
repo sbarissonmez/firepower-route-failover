@@ -297,3 +297,24 @@ class FirePower():
             print("Request FAILED. " + str(resp.status_code))
             return False
 
+    def postData(self, url, payload=None):
+        # General function for HTTP POST requests with authentication token
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + self.token
+        }
+        get_url = baseurl + url
+        resp = self.s.post(get_url, headers=headers, verify=False,
+                           json=payload)
+        if resp.status_code == 200:
+            return resp.text
+        if resp.status_code == 422:
+            print("Object already exists")
+            return resp.text
+        else:
+            print("Request FAILED. " + str(resp.status_code))
+            print(resp.text)
+
+
+if __name__ == "__main__":
+    FirePower()
