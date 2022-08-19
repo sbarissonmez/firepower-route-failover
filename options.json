@@ -10,7 +10,7 @@
       "username": "cisco",
       "password": "cisco",
       "failover_route": "0.0.0.0/0",
-      "failover_gateway": "192.168.5.10",
-      "failover_interface": "Ethernet1/2"
+      "failover_gateway": "10.10.10.10",
+      "failover_interface": "Ethernet1/1"
     }
   }
