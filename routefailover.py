@@ -34,3 +34,18 @@ def doPing():
     print("Target response time: <" + str(MAX_LATENCY) +
           "ms. Target Loss: <" + str(MAX_LOSS))
     return result.rtt_avg_ms, loss
+
+
+def calculateLoss(result):
+    # Take in ping results, parse for loss data
+    lost = 0
+    for packet in result:
+        if "Reply from" in str(packet):
+            pass
+        else:
+            lost += 1
+    if lost != 0:
+        lossperc = 100 * lost / PING_COUNT
+        return lossperc
+    elif lost == 0:
+        return 0
