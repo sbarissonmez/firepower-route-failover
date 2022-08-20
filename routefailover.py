@@ -49,3 +49,13 @@ def calculateLoss(result):
         return lossperc
     elif lost == 0:
         return 0
+
+
+def checkMetrics(response, loss):
+    # Simple check if our responses were under the expected thresholds
+    if response >= MAX_LATENCY or loss >= MAX_LOSS:
+        print("Loss/Latency violate thresholds.")
+        return True
+    else:
+        print("Loss/Latency within thresholds.")
+        return False
