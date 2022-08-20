@@ -59,3 +59,27 @@ def checkMetrics(response, loss):
     else:
         print("Loss/Latency within thresholds.")
         return False
+
+
+def run():
+    # Gather loss / latency data
+    response, loss = doPing()
+    # Check if it exceeds thresholds
+    failover = checkMetrics(response, loss)
+    # IF loss/latency outside of thresholds,
+    # add default route to second provider
+    fw = firepower.FirePower()
+    if failover is True:
+        result = fw.addRoute()
+        if result is True:
+            print("TRAFFIC SUCCESSFULLY FAILED OVER TO BACKUP CONNECTION")
+    # IF loss/latency is healthy,
+    # remove default route to second provider
+    elif failover is False:
+        result = fw.delRoute()
+        if result is True:
+            print("TRAFFIC SUCCESSFULLY ROUTED BACK TO PRIMARY CONNECTION")
+
+
+if __name__ == "__main__":
+    run()
